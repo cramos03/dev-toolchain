@@ -1,52 +1,82 @@
-import {
-    BoxGeometry,
-    Mesh,
-    MeshPhongMaterial,
-    PerspectiveCamera,
-    Scene,
-    WebGLRenderer,
-    DirectionalLight,
-  } from "three";
-  
-  // Create our scene
-  const scene = new Scene();
-  
-  // Create the camera so we can see our scene
-  const camera = new PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  
-  // Create our renderer and add it to the DOM
-  const renderer = new WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-  
-  // Create our cube mesh from  a geometry and a material and add it to the scene
-  const geometry = new BoxGeometry(1, 1, 1);
-  const material = new MeshPhongMaterial({ color: 0x00ff00 });
-  const cube = new Mesh(geometry, material);
-  scene.add(cube);
-  
-  // Add a directional light so we can see shadows on the cube
-  const color = 0xffffff;
-  const intensity = 1;
-  const light = new DirectionalLight(color, intensity);
-  light.position.set(-1, 2, 4);
-  scene.add(light);
-  
-  // Position the camera
-  camera.position.z = 5;
-  
-  // The animation loop updates the cube's rotation
-  function animate() {
-    requestAnimationFrame(animate);
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-    renderer.render(scene, camera);
+let ball;
+let leftPaddle;
+let rightPaddle;
+let leftScore = 0;
+let rightScore = 0;
+let gameStarted = false;
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  ball = createSprite(width / 2, height / 2, 10, 10);
+  leftPaddle = createSprite(50, height / 2, 10, 80);
+  rightPaddle = createSprite(width - 50, height / 2, 10, 80);
+}
+
+function draw() {
+  background(0);
+  drawSprites();
+  textSize(32);
+  fill(255);
+  text(leftScore, width / 4, 40);
+  text(rightScore, 3 * width / 4, 40);
+
+  if (!gameStarted) {
+    textSize(24);
+    text("Click to start", width / 2 - 80, height / 2);
+    if (mouseIsPressed) {
+      gameStarted = true;
+      ball.velocity.x = random(-5, 5);
+      ball.velocity.y = random(-5, 5);
+    }
+    return;
   }
-  
-  // Start the animation loop
-  animate();
+
+  // Ball movement and collision with paddles
+  if (ball.bounce(leftPaddle) || ball.bounce(rightPaddle)) {
+    // Increase ball speed
+    ball.velocity.x *= 1.05;
+    ball.velocity.y *= 1.05;
+  }
+  if (ball.bounce(topWall) || ball.bounce(bottomWall)) {
+    ball.velocity.y *= -1;
+  }
+  if (ball.position.x < 0) {
+    rightScore++;
+    resetBall();
+  } else if (ball.position.x > width) {
+    leftScore++;
+    resetBall();
+  }
+  ball.velocity.limit(10);
+  ball.position.add(ball.velocity);
+
+  // Left paddle movement
+  if (keyIsDown(87)) { // "W" key
+    leftPaddle.position.y -= 5;
+  }
+  if (keyIsDown(83)) { // "S" key
+    leftPaddle.position.y += 5;
+  }
+  leftPaddle.position.y = constrain(leftPaddle.position.y, 40, height - 40);
+
+  // Right paddle movement
+  if (keyDown(UP_ARROW)) {
+    rightPaddle.position.y -= 5;
+  }
+  if (keyDown(DOWN_ARROW)) {
+    rightPaddle.position.y += 5;
+  }
+  rightPaddle.position.y = constrain(rightPaddle.position.y, 40, height - 40);
+
+  // Draw center line
+  stroke(255);
+  line(width / 2, 0, width / 2, height);
+}
+
+function resetBall() {
+  ball.position.x = width / 2;
+  ball.position.y = height / 2;
+  ball.velocity.x = 0;
+  ball.velocity.y = 0;
+  gameStarted = false;
+}
