@@ -31,9 +31,7 @@ function draw() {
     return;
   }
 
-  // Ball movement and collision with paddles
   if (ball.bounce(leftPaddle) || ball.bounce(rightPaddle)) {
-    // Increase ball speed
     ball.velocity.x *= 1.05;
     ball.velocity.y *= 1.05;
   }
@@ -67,10 +65,6 @@ function draw() {
     rightPaddle.position.y += 5;
   }
   rightPaddle.position.y = constrain(rightPaddle.position.y, 40, height - 40);
-
-  // Draw center line
-  stroke(255);
-  line(width / 2, 0, width / 2, height);
 }
 
 function resetBall() {
